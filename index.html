@@ -285,7 +285,7 @@ body {
                     }
                     matrix.push(row);
                 }
-                return matrix;
+                return matrix //[matrix[0], matrix[1]];
             }
     
             function _initCheckBoxes(n) {
@@ -366,12 +366,9 @@ body {
         return function(tasks_wrapper, procs_wrapper, display=true) {
             var full_power = 10 * 1000 * procs_wrapper.fullPower();
             var used_power = 0;
-        
-            function schedule() {
-                var matrix = tasks_wrapper.getMatrix();
-                var row_i = 0;
-                for (var task of tasks_wrapper.getAll()) {
-                    if (task.getAttribute('class') != 'task-active') {
+
+            function setProcessor(task, row_i, matrix) {
+                if (task.getAttribute('class') != 'task-active') {
                         var row = matrix[row_i];
                         if (row.length != 0) {
                             var col_i = 0;
@@ -386,20 +383,48 @@ body {
                                         task.setAttribute('class', 'task-active');
                                         tasks_wrapper.getAll()[row_i].proc = (row[col_i]);
                                         activated = true;
-                                        break;
+                                        return false;
                                     }
                                     ++col_i;
                                 }
                                 ++proc_i;
                             }
-                            if (!activated) break;
+                            if (!activated) return false;
                         } else {
-                            break;
+                            return false;
                         }
                     }
                     ++row_i;
+                    return true;
+            }
+        
+            function fifo_scheduler() {
+                var matrix = tasks_wrapper.getMatrix();
+                var row_i = 0;
+                var one = 0;
+                for (var task of tasks_wrapper.getAll()) {
+                    if (one == 1) break;
+                    ++one;
+                    if (!setProcessor(task, row_i, matrix)) break;
                 }
             }
+
+            function rr_scheduler() {
+                var matrix = tasks_wrapper.getMatrix();
+                var row_i = 0;
+                var one = 0;
+                for (var task of tasks_wrapper.getAll()) {
+                    if (!setProcessor(task, row_i, matrix)) break;
+                }
+            }
+
+            var schedule = undefined;
+            var mode = 'fifo'
+            switch (mode) {
+                case 'fifo':
+                    schedule = fifo_scheduler;
+            }
+
             function releaseProc(proc) {
                 proc.setAttribute('class', 'proc-idle');
                 proc.lastChild.remove();
