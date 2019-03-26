@@ -5,120 +5,104 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.header {
-  background-color: #f1f1f1;
-  padding: 30px;
-  text-align: center;
-  font-size: 35px;
-}
-
-.task-idle,
-.task-busy,
-.task-active,
-.row {
-  display: -webkit-flex;
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.button
-.proc-busy,
-.proc-active,
-.column {
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-}
-
+    * {
+        box-sizing: border-box;
+    }
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    .header {
+        background-color: #f1f1f1;
+        padding: 30px;
+        text-align: center;
+        font-size: 35px;
+    }
+    .task-idle,
+    .task-wait,
+    .task-active,
+    .row {
+        display: -webkit-flex;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .button
+    .proc-wait,
+    .proc-idle,
+    .proc-active,
+    .column {
+        -webkit-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+    }
     .check_b {
         text-align: center;
-        width: 5%;
+        /*width: 5%;*/
     }
-
-.footer {
-  background-color: #f1f1f1;
-  padding: 10px;
-  text-align: center;
-}
-.column1 {
-    width: 25%;
+    .footer {
+        background-color: #f1f1f1;
+        padding: 10px;
+        text-align: center;
     }
-
+    .column1 {
+        /*width: 33%;*/
+    }
     #prob, #prob_text {
         font-size: 24px;
     }
-
-.run,
-.stop,
-.button
-.proc-busy,
-.proc-active,
-.task-busy,
-.task-active,
-.proc-idle,
-.task-idle {
-    margin: 10px;
-    padding: 10px;
-}
-
-    .task-busy,
-    .proc-busy {
+    .run,
+    .stop,
+    .button,
+    .proc-wait,
+    .proc-active,
+    .task-wait,
+    .task-active,
+    .proc-idle,
+    .task-idle {
+        margin: 10px;
+        padding: 10px;
+    }
+    .task-wait,
+    .proc-wait {
         background-color: blue;
         box-shadow: 0 0 10px rgba(0, 0, 255, 1);
     }
-
     .task-active,
     .proc-active {
         background-color: #5ac955;
         box-shadow: 0 0 10px rgba(0, 255, 0, 1);
     }
-
     .task-idle,
     .proc-idle {
         background-color: #cccccc;
         box-shadow: 0 0 10px rgba(0, 0, 0, 1);
     }
-
     .task-wait {
         background-color: blue;
         box-shadow: 0 0 10px rgba(0, 0, 255, 1);
     }
-
     .inp {
         width: 60px;
     }
-
-.run,
-.stop,
-.button {
-  border: none;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-
+    .run,
+    .stop,
+    .button {
+        border: none;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        cursor: pointer;
+    }
     /*
     #task_procs {
-
         margin: 10px;
         padding: 10px;
         font-size: 14px;
         background-color: #cccccc;
         box-shadow: 0 0 10px rgba(0, 0, 0, 1);
     }*/
-
     .run {
         background-color: #5ac955;
         box-shadow: 0 0 10px rgba(0, 0, 0, 1);
@@ -127,7 +111,6 @@ body {
         background-color: green;
         box-shadow: 0 0 10px rgba(0, 0, 0, 1) inset;
     }
-
     .stop {
         background-color: #f23030;
         box-shadow: 0 0 10px rgba(0, 0, 0, 1);
@@ -139,30 +122,43 @@ body {
     .run, .stop {
         margin-top: 30%;
     }
-
     .task_text {
         width: 70%;
     }
-
-@media (max-width: 600px) {
-  .row {
-    -webkit-flex-direction: column;
-    flex-direction: column;
-  }
-}
+    .proc-wait,
+    .proc-active,
+    .proc-idle {
+        flex: 1;
+        display: inline-block;
+        max-width: 250px !important;
+        height: 200px !important;
+    }
+    @media (max-width: 600px) {
+        .row {
+            -webkit-flex-direction: column;
+            flex-direction: column;
+        }
+    }
+/*
+#proc-column {
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    max-width: 250px;
+}*/
 </style>
 </head>
 <body>
 
-<div class="header">
+ <div class="header">
   <h2>Планування задач в багатопроцесорних системах</h2>
 </div>
 
-<div class="column">
+ <div class="column">
     <div class="row">
         <div class="button_columm"><button id="run" class="run">Run</button></div>
         <div class="button_columm"><button id="stop" class="stop">Stop</button></div>
-        <div class="columm"><p id="prob_text">Імовірність появи задач <input id="prob" class="inp" type="number" name="power" value="0.1" min="0" max="1"></p></div>
+        <div class="columm"><p id="prob_text">Імовірність появи задач <input id="prob" class="inp" type="number" name="power" value="0.1" min="0"></p></div>
         </div>
     </div>
 <div class="row">
@@ -171,13 +167,16 @@ body {
 </div>
 </div>
 
-<div class="footer">
+ <div class="footer">
     <p></p>
 </div>
 
-<script>
+ <script>
         'use strict'
     
+    var app_mode = undefined;
+    var schedule_processors = undefined;
+
     var DOMWrapper = (function() {
         return function(wrapper_id) {
             var _element = document.getElementById(wrapper_id);
@@ -233,7 +232,7 @@ body {
                     +'<form>'
                         +'Потужність: '
                         +'<input class="inp" type="number" name="power" value="1" min="0"><br>'
-                    +'</form><div>Вільний</div>'
+                    +'</form><div><p>Вільний</p><p></p></div>'
                 +'</div>';
                 return proc_html;
             };
@@ -268,11 +267,35 @@ body {
             var _root = MultipleElementsWrapperWithCounter(wrapper_id, _html_creator);
             var _n = 0;
             var _cbox_buf = [];
-            function _getMatrix() {
+            var _getMatrixIgnoreScheduleProc = function() {
                 var matrix = [];
                 for (var task of _root.getAll()) {
                     var c = 0;
                     var row = [];
+                    var planning_procs = []
+                    for (var chb_w of task.children) {
+                        if (c != 0) {
+                            for (var chb of chb_w.children) {
+                                if (chb.checked) {
+                                    if (processors.getPower(processors.getAll()[c-1]) <= 0) {
+                                    } else {
+                                        row.push(c);
+                                    }
+                                }
+                            }
+                        }
+                        ++c;
+                    }
+                    matrix.push(row);
+                }
+                return matrix;
+            }
+            var _getMatrixAllProc = function() {
+                var matrix = [];
+                for (var task of _root.getAll()) {
+                    var c = 0;
+                    var row = [];
+                    var planning_procs = []
                     for (var chb_w of task.children) {
                         if (c != 0) {
                             for (var chb of chb_w.children) {
@@ -285,9 +308,10 @@ body {
                     }
                     matrix.push(row);
                 }
-                return matrix //[matrix[0], matrix[1]];
+                return matrix;
             }
     
+            var _getMatrix = (app_mode == 2) ? _getMatrixIgnoreScheduleProc : _getMatrixAllProc;
             function _initCheckBoxes(n) {
                 _cbox_buf = _getMatrix();
             }
@@ -320,14 +344,21 @@ body {
                     //_n = 0;
                 },
                 initCheckBoxes: _initCheckBoxes,
-                init: (n) => {
+                init: (n, check_mode) => {
                     for (var i = 0; i < n; ++i) {
                         _root.getRoot().insertAdjacentHTML('beforeend', _html_creator(_n));
                         var curr = _root.getRoot().lastChild;
                         curr.num = _n;
-                        for (var proc of processors.getAll()) {
-                            curr.insertAdjacentHTML('beforeend', '<div class="column"><input type="checkbox" checked></div>');
+                        if (check_mode == 'all-checked') {
+                            for (var proc of processors.getAll()) {
+                                curr.insertAdjacentHTML('beforeend', '<div class="column"><input type="checkbox" checked></div>');
+                            }
+                        } else {
+                            for (var proc of processors.getAll()) {
+                                curr.insertAdjacentHTML('beforeend', '<div class="column"><input type="checkbox"></div>');
+                            }
                         }
+                        
                         ++_n;
                     }
                 },
@@ -366,9 +397,21 @@ body {
         return function(tasks_wrapper, procs_wrapper, display=true) {
             var full_power = 10 * 1000 * procs_wrapper.fullPower();
             var used_power = 0;
-
-            function setProcessor(task, row_i, matrix) {
-                if (task.getAttribute('class') != 'task-active') {
+            function setProcAsActive(proc, task, row_i) {
+                proc.setAttribute('class', 'proc-active');
+                proc.lastChild.remove();
+                proc.insertAdjacentHTML('beforeend', 
+                    '<div><p>Обробка</p><p>№'+(tasks_wrapper.getAll()[row_i].num+1)+'</p></div>');
+            }
+            function setTaskAsBeingRunOnProc(task, proc_num, row_i) {
+                task.setAttribute('class', 'task-active');
+                tasks_wrapper.getAll()[row_i].proc = proc_num;
+            }
+            function fifo_schedule() {
+                var matrix = tasks_wrapper.getMatrix();
+                var row_i = 0;
+                for (var task of tasks_wrapper.getAll()) {
+                    if (task.getAttribute('class') != 'task-active') {
                         var row = matrix[row_i];
                         if (row.length != 0) {
                             var col_i = 0;
@@ -377,58 +420,64 @@ body {
                             for (var proc of procs_wrapper.getAll()) {
                                 if (row[col_i] == proc_i+1) {
                                     if (proc.getAttribute('class') != 'proc-active') {
-                                        proc.setAttribute('class', 'proc-active');
-                                        proc.lastChild.remove();
-                                        proc.insertAdjacentHTML('beforeend', '<div>Обробка №'+(tasks.getAll()[row_i].num+1)+'</div>');
-                                        task.setAttribute('class', 'task-active');
-                                        tasks_wrapper.getAll()[row_i].proc = (row[col_i]);
+                                        setProcAsActive(proc, task, row_i);
+                                        setTaskAsBeingRunOnProc(task, row[col_i], row_i);
                                         activated = true;
-                                        return false;
+                                        break;
                                     }
                                     ++col_i;
                                 }
                                 ++proc_i;
                             }
-                            if (!activated) return false;
+                            if (!activated) break;
                         } else {
-                            return false;
+                            break;
                         }
                     }
                     ++row_i;
-                    return true;
-            }
-        
-            function fifo_scheduler() {
-                var matrix = tasks_wrapper.getMatrix();
-                var row_i = 0;
-                var one = 0;
-                for (var task of tasks_wrapper.getAll()) {
-                    if (one == 1) break;
-                    ++one;
-                    if (!setProcessor(task, row_i, matrix)) break;
                 }
             }
-
-            function rr_scheduler() {
+            function planned_schedule() {
                 var matrix = tasks_wrapper.getMatrix();
                 var row_i = 0;
-                var one = 0;
                 for (var task of tasks_wrapper.getAll()) {
-                    if (!setProcessor(task, row_i, matrix)) break;
+                    if (task.getAttribute('class') != 'task-active') {
+                        var row = matrix[row_i];
+                        if (row.length != 0) {
+                            var col_i = 0;
+                            var proc_i = 0;
+                            var proc_max_power = undefined;
+                            var proc_max_power_number = undefined;
+                            for (var proc of procs_wrapper.getAll()) {
+                                if (row[col_i] == proc_i+1) {
+                                    if (proc.getAttribute('class') != 'proc-active') {
+                                        var current_proc_power = procs_wrapper.getPower(proc);
+                                        if (proc_max_power == undefined || proc_max_power < current_proc_power) {
+                                            proc_max_power = current_proc_power;
+                                            proc_max_power_number = proc_i+1;
+                                        }
+                                    }
+                                    ++col_i;
+                                }
+                                ++proc_i;
+                            }
+                            if (proc_max_power_number == undefined) break;
+                            else {
+                                setProcAsActive(procs_wrapper.getAll()[proc_max_power_number-1], task, row_i);
+                                setTaskAsBeingRunOnProc(task, proc_max_power_number, row_i);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    ++row_i;
                 }
             }
-
-            var schedule = undefined;
-            var mode = 'fifo'
-            switch (mode) {
-                case 'fifo':
-                    schedule = fifo_scheduler;
-            }
-
+            var schedule = (app_mode == 1) ? fifo_schedule : planned_schedule;
             function releaseProc(proc) {
                 proc.setAttribute('class', 'proc-idle');
                 proc.lastChild.remove();
-                proc.insertAdjacentHTML('beforeend', '<div>Вільний</div>');
+                proc.insertAdjacentHTML('beforeend', '<div><p>Вільний</p><p></p></div>');
             }
             function removeFirstTask() {
                 if (tasks_wrapper.getAll().length != 0) {
@@ -439,7 +488,16 @@ body {
                 releaseProc(procs_wrapper.getAll()[proc-1]);
                 schedule();
             }
-            function makeParallelPromises() {
+            var proc_promise_func_maker = function(proc, timeout, complexity) { 
+                return function(resolve, reject) {
+                    setTimeout(() => {
+                        used_power = (+used_power) + (+complexity);
+                        releaseTaskProc(proc);
+                        resolve();
+                    }, timeout);
+                }; 
+            }
+            function makeParallelPromisesNoScheduleProc() {
                 schedule();
                 var parallel_execution_promises = [];
                 var i = 0;
@@ -449,20 +507,41 @@ body {
                     let complexity = tasks_wrapper.getComplexity(task);
                     let power = procs_wrapper.getPower(procs_wrapper.getAll()[_proc-1]);
                     var timeout = complexity / power;
-                    parallel_execution_promises.push(new Promise(
-                        (function(proc) { 
-                            return function(resolve, reject) {
-                                setTimeout(() => {
-                                    used_power = (+used_power) + (+complexity);
-                                    releaseTaskProc(proc);
-                                    resolve();
-                                }, timeout);
-                            }; 
-                        })(_proc)));
+                    parallel_execution_promises.push(new Promise(proc_promise_func_maker(_proc, timeout, complexity)));
                     ++i;
                 }
                 return parallel_execution_promises;
             }
+            var scheduler_proc_promise_func_maker = function(proc, timeout, complexity) { 
+                return function(resolve, reject) {
+                    setTimeout(() => {
+                        used_power = (+used_power) + (+complexity) - 4;
+                        releaseTaskProc(proc);
+                        resolve();
+                    }, timeout);
+                }; 
+            }
+            function makeParallelPromisesWithScheduleProc() {
+                schedule();
+                var parallel_execution_promises = [];
+                var i = 0;
+                for (var task of tasks_wrapper.getAll()) {
+                    if (task.getAttribute('class') != 'task-active') break;
+                    var _proc = tasks_wrapper.getAll()[i].proc;
+                    let complexity = tasks_wrapper.getComplexity(task);
+                    let power = procs_wrapper.getPower(procs_wrapper.getAll()[_proc-1]);
+                    var timeout = complexity / power;
+                    if (schedule_processors.indexOf(_proc) != -1) {
+                        parallel_execution_promises.push(new Promise(scheduler_proc_promise_func_maker(_proc, timeout, complexity)));
+                    } else {
+                        parallel_execution_promises.push(new Promise(proc_promise_func_maker(_proc, timeout, complexity)));
+                    }
+                    ++i;
+                }
+                return parallel_execution_promises;
+            }
+            
+            var makeParallelPromises = app_mode == 3 ? makeParallelPromisesWithScheduleProc : makeParallelPromisesNoScheduleProc;
             
             async function runAll() {
                 var task_probability = document.getElementById('prob').value;
@@ -490,9 +569,6 @@ body {
                             var interval = setInterval(async() => {
                                 if (Math.random() < task_probability) {
                                     tasks_wrapper.create(1);
-                                    added = true;
-                                }
-                                if (added) {
                                     clearInterval(interval);
                                     if (!work_finished) {
                                         await runCurrentTasks();
@@ -500,15 +576,11 @@ body {
                                 }
                                 //console.log(work_finished);
                             }, 1);
-                        } else {
-                            await runCurrentTasks();
-                        }
-                    } else {
-                        return Promise.resolve();
+                        } else await runCurrentTasks();
                     }
                 }
     
-                (async() => setTimeout(function addTask() {
+                var task_creator = (async() => setTimeout(function addTask() {
                     if (!work_finished) {
                         if (Math.random() < task_probability) {
                             tasks_wrapper.create(1);
@@ -518,6 +590,7 @@ body {
                 }, 1))();
     
                 await runCurrentTasks();
+                await task_creator;
             }
             async function _runTimes(n) {
                 tasks_wrapper.initCheckBoxes();
@@ -542,17 +615,44 @@ body {
             };
         };
     })();
+
+    //   //  //////  //////   //////
+    //   //  //      //  //   //
+    ///////  /////   /////    /////
+    //   //  //      //  //   // 
+    //   //  //////  //   //  //////
+
+    app_mode = 1;
+
+    //   //  //////  //////   //////
+    //   //  //      //  //   //
+    ///////  /////   /////    /////
+    //   //  //      //  //   // 
+    //   //  //////  //   //  //////
+
         var tasks_id = 'task-column';
         var processors_id = 'proc-column';
         var processors = ProcessorsWrapper(processors_id);
         processors.create(5);
         var tasks = TasksWrapper(tasks_id, processors);
-        tasks.init(10);
+        tasks.init(10, 'all-checked');
         var model = ParallelExecutionModel(tasks, processors);
+
         document.getElementById("run").addEventListener("click", () => {
+            if (app_mode == 2 || app_mode == 3) {
+                var c = 0;
+                schedule_processors = [];
+                for (var proc of processors.getAll()) {
+                    if (processors.getPower(proc) <= 0) {
+                        schedule_processors.push(c);
+                        proc.setAttribute('class', 'proc-wait');
+                    }
+                    ++c;
+                }
+            }
             model.runTimes(1);
         });
     </script>
 
-</body>
+ </body>
 </html>
