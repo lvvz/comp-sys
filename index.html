@@ -157,8 +157,8 @@
  <div class="column">
     <div class="row">
         <div class="button_columm"><button id="run" class="run">Run</button></div>
-        <div class="button_columm"><button id="stop" class="stop">Stop</button></div>
-        <div class="columm"><p id="prob_text">Імовірність появи задач <input id="prob" class="inp" type="number" name="power" value="0.1" min="0"></p></div>
+        <!--div class="button_columm"><button id="stop" class="stop">Stop</button></div>-->
+        <div class="columm"><p id="prob_text">Імовірність появи задач <input id="prob" class="inp" step="0.01" type="number" name="power" value="0.1" min="0"></p></div>
         </div>
     </div>
 <div class="row">
@@ -241,7 +241,7 @@
             function _fullPower() {
                 var result = 0;
                 for (var proc of _root.getAll()) {
-                    result = (+result) + (+_getPower(proc));
+                    result = (+result) + Math.abs(+_getPower(proc));
                 }
                 return result;
             }
@@ -397,6 +397,7 @@
         return function(tasks_wrapper, procs_wrapper, display=true) {
             var full_power = 10 * 1000 * procs_wrapper.fullPower();
             var used_power = 0;
+            var schedule_time = 4;
             function setProcAsActive(proc, task, row_i) {
                 proc.setAttribute('class', 'proc-active');
                 proc.lastChild.remove();
@@ -430,12 +431,15 @@
                                 ++proc_i;
                             }
                             if (!activated) break;
-                        } else {
-                            break;
-                        }
+                        } else break;
                     }
                     ++row_i;
                 }
+            }
+            function setProcAsScheduling(proc_i) {
+                procs_wrapper.getAll()[proc_i-1].setAttribute('class', 'proc-wait');
+                procs_wrapper.getAll()[proc_i-1].lastChild.remove();
+                procs_wrapper.getAll()[proc_i-1].insertAdjacentHTML('beforeend', '<div><p>Планування</p></div>');
             }
             function planned_schedule() {
                 var matrix = tasks_wrapper.getMatrix();
@@ -450,7 +454,8 @@
                             var proc_max_power_number = undefined;
                             for (var proc of procs_wrapper.getAll()) {
                                 if (row[col_i] == proc_i+1) {
-                                    if (proc.getAttribute('class') != 'proc-active') {
+                                    if (proc.getAttribute('class') != 'proc-active' 
+                                        && proc.getAttribute('class') != 'proc-wait') {
                                         var current_proc_power = procs_wrapper.getPower(proc);
                                         if (proc_max_power == undefined || proc_max_power < current_proc_power) {
                                             proc_max_power = current_proc_power;
@@ -512,12 +517,15 @@
                 }
                 return parallel_execution_promises;
             }
-            var scheduler_proc_promise_func_maker = function(proc, timeout, complexity) { 
+            var scheduler_proc_promise_func_maker = function(proc_i, timeout, complexity) {
                 return function(resolve, reject) {
-                    setTimeout(() => {
-                        used_power = (+used_power) + (+complexity) - 4;
-                        releaseTaskProc(proc);
-                        resolve();
+                    var t1 = setTimeout(() => {
+                        used_power = (+used_power) + (+complexity);
+                        setProcAsScheduling(proc_i);
+                        var t2 = setTimeout(() => {
+                            releaseTaskProc(proc_i);
+                            resolve();
+                        }, schedule_time);
                     }, timeout);
                 }; 
             }
@@ -622,7 +630,7 @@
     //   //  //      //  //   // 
     //   //  //////  //   //  //////
 
-    app_mode = 1;
+    app_mode = 3;
 
     //   //  //////  //////   //////
     //   //  //      //  //   //
@@ -637,15 +645,16 @@
         var tasks = TasksWrapper(tasks_id, processors);
         tasks.init(10, 'all-checked');
         var model = ParallelExecutionModel(tasks, processors);
-
         document.getElementById("run").addEventListener("click", () => {
-            if (app_mode == 2 || app_mode == 3) {
-                var c = 0;
+            if (app_mode != 1) {
+                var c = 1;
                 schedule_processors = [];
                 for (var proc of processors.getAll()) {
                     if (processors.getPower(proc) <= 0) {
                         schedule_processors.push(c);
-                        proc.setAttribute('class', 'proc-wait');
+                        if (app_mode == 2) {
+                            proc.setAttribute('class', 'proc-wait');
+                        }
                     }
                     ++c;
                 }
@@ -653,6 +662,5 @@
             model.runTimes(1);
         });
     </script>
-
  </body>
 </html>
