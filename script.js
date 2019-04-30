@@ -1,7 +1,15 @@
 'use strict'
 
 var Task = (function() {
-    let _processorsNumbers = [];
+    return function() {
+        let number = 0;
+        return {
+            make: (power, processorCombination) => {
+                ++number;
+                return { power, processorCombination, number }
+            }
+        };
+    };
 })();
 
 var Processor = (function() {
@@ -87,23 +95,40 @@ var CombinationArray = function(n) {
     return array;
 };
 
+let taskRenderer = (power, processors) => {
+
+}
+
+let random = (min, max) => Math.random() * (+max - +min) + +min;
+let randomInt = (min, max) => parseInt(random(min, max));
 var TaskQueueCreator = (function() {
     return function(runTimeSeconds, taskProbability, initTaskCount, processorCount, minPower, maxPower) {
         let queue = [];
         let taskWrapper = Task();
-        let random = (min, max) => Math.random() * (+max - +min) + +min;
-        let randomInt = (min, max) => parseInt(random(min, max));
         let randomPower = () => randomInt(minPower, maxPower+1);
         let randomProcessorCombination = () => 1 + randomInt(0, Math.pow(2, processorCount));
-        let enqueueNew = () => queue.push([randomPower(), randomProcessorCombination()]);
+        let enqueueNew = () => queue.push({
+            task: taskWrapper.make(randomPower(), randomProcessorCombination()),
+            processor: undefined
+        });
         let combinations = CombinationArray(processorCount);
-        console.log(combinations);
+        //console.log(combinations);
+        let renderNew = (i) => {
+            let task = queue[i].task;
+            taskRenderer(task.power, combinations[task.processorCombination]);
+        } 
         let taskQueueInit = () => {
-
+            for (let i = 0; i < initTaskCount; ++i) {
+                enqueueNew();
+            }
+            for (let i = 0; i < initTaskCount; ++i) {
+                renderNew(i);
+            }
         }
         let runner = TaskQueueRunner(runTimeSeconds, taskProbability, enqueueNew);
+        let taskQueueStart = () => runner.start();
         return {
-
+            taskQueueInit, taskQueueStart
         };
     };
 })();
