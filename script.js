@@ -4,6 +4,10 @@ let doNTimes = (f, n) => {
     for (let i = 0; i < n; ++i) f();
 }
 
+let doNTimesWithIteration = (f, n) => {
+    for (let i = 0; i < n; ++i) f(i);
+}
+
 let random = (min, max) => Math.random() * (+max - +min) + +min;
 let randomInt = (min, max) => parseInt(random(min, max));
 
@@ -21,17 +25,18 @@ let Task = (function() {
 
 let ProcessorHTML = (function() {
     return function() {
-        let create = (n) => {
+        let create = (number, power) => {
             return '<div class="proc-idle">'
-                +'<div>Процесор №'+(n+1)+'</div>'
+                +'<div>Процесор №'+number+'</div>'
                 +'<form>'
                     +'Потужність: '
-                    +'<input class="inp" type="number" name="power" value="1" min="0"><br>'
+                    +'<input class="inp" type="number" value="'+power+'" name="power" min="0"><br>'
                 +'</form><div>Вільний</div>'
             +'</div>';
         };
+        let getPower = (element) => element.children[1].children[0].value;
         return {
-            create
+            create, getPower
         };
     };
 })();
@@ -143,7 +148,8 @@ let TaskCreator = (taskQueueElement, processorCount) => {
 
 let TaskQueueCreator = (function() {
     return function(runTimeSeconds, taskProbabilityGetter, initTaskCount, 
-        minPowerGetter, maxPowerGetter, taskCountSetter, render, randomProcessorCombination) {
+        minPowerGetter, maxPowerGetter, taskCountSetter, render, randomProcessorCombination,
+        schedulerMode) {
         let queue = [];
         let taskCount = 0;
         let taskWrapper = Task();
@@ -170,7 +176,15 @@ let TaskQueueCreator = (function() {
             }
         }
         let runner = TaskQueueRunner(runTimeSeconds, taskProbabilityGetter, addNew);
-        let start = () => runner.start();
+        let getQueue = () => queue;
+        let schedulerCreator = SchedulerCreatorMaker(schedulerMode);
+        let scheduler = schedulerCreator(getQueue);
+        let start = (data) => {
+            runner.start();
+            let processors = data.processors;
+            let report = scheduler(processors);
+            return report;
+        }
         return {
             init, start
         };
@@ -180,21 +194,28 @@ let TaskQueueCreator = (function() {
 let TaskQueueCreatorMaker = 
     (runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter) => 
     (render, randomProcessorCombination) => 
-    TaskQueueCreator(runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter, render, randomProcessorCombination);
+    TaskQueueCreator(runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter,
+         render, randomProcessorCombination);
 
 let Processor = () => (power) => { return { power, task: undefined }; };
 
-let Processors = () => {}
-
-let ProcessorCreator = (processorsElement) => {
+let ProcessorsCreator = (processorsInfo) => {
+    let processorsElement = processorsInfo.processorsElement;
     let processorHTML = ProcessorHTML();
-    return (processor) => {
-
+    let minPower = processorsInfo.minProcessorPower;
+    let maxPower = processorsInfo.maxProcessorPower;
+    let create = (number) => {
+        let power = randomInt(minPower, maxPower);
+        processorsElement.insertAdjacentHTML('beforeend', processorHTML.create(number, power));
     };
+    let getPower = (element) => processorHTML.getPower(element);
+    return { create, getPower };
 };
 
 let Model = (function() {
-    return function(taskQueueElement, processorsElement, initProcessorCount, taskQueueCreatorMaker) {
+    return function(taskQueueElement, processorsInfo, taskQueueCreatorMaker) {
+        let processorsElement = processorsInfo.processorsElement;
+        let initProcessorCount = processorsInfo.initProcessorCount;
         let taskCreator = TaskCreator(taskQueueElement, initProcessorCount);
         let randomProcessorCombination = (() => {
             let pow2 = Math.pow(2, initProcessorCount);
@@ -202,23 +223,28 @@ let Model = (function() {
         })();
         let taskQueueCreator = taskQueueCreatorMaker(taskCreator, randomProcessorCombination);
 
-        let processorCreator = ProcessorCreator(processorsElement);
-        /*let createNewProcessor = () => {
-            undefined
-        }
-        let appendNewProcessor = () => processorsElement.appendChild(createNewProcessor());*/
-        let appendNewProcessors = () => doNTimes(()=>{}, initProcessorCount);
+        let processorCreator = ProcessorsCreator(processorsInfo);
+        let appendNewProcessors = () => doNTimesWithIteration((i) => processorCreator.create(i+1), initProcessorCount);
 
         let cleanTaskQueue = () => taskQueueElement.innerHTML = "";
         let cleanProcessors = () => processorsElement.innerHTML = "";
         let clean = () => { cleanProcessors(); cleanTaskQueue(); }
 
+        let makeProcessors = () => {
+            let processors = [];
+            for (let processorElement of processorsElement.children) {
+                processors.push(processorCreator.getPower(processorElement));
+            }
+            return processors;
+        }
         let init = () => {
             appendNewProcessors();
+            let processors = makeProcessors();
             taskQueueCreator.init();
+            return { processors };
         }
-        let start = () => {
-            let report = taskQueueCreator.start();
+        let start = (data) => {
+            let report = taskQueueCreator.start(data);
             //clean();
             return report;
         };
@@ -252,3 +278,22 @@ let ModelRunner = (model, runTimes) => {
         init, start
     };
 };
+
+let Schedulers = (getQueue, processors) => { 
+    return {
+    'FIFO': () => {
+
+    },
+    'JSP': () => {
+
+    },
+    '': () => {
+
+    },
+    '': () => {
+
+    }
+};
+};
+
+let SchedulerCreatorMaker = (mode) => (getQueue) => (processors) => Schedulers(getQueue, processors)[mode]();

@@ -16,46 +16,66 @@
     </div>
     
     <div class="column">
-        <div class="row">
-            <span>Режим</span>
-            <select>
-                <option value="FIFO">FIFO</option>
-                <option value="JSP">Плануючий процесор</option>
-                <option value="JIESP">Плануючий і обчислюючий процесор з перериванням черги</option>
-                <option value="JOESP">Плануючий і обчислюючий процесор з оптимальним часом плануванням</option>
-            </select>
-        </div>
-        <div class="row">
-            <span>Мінімальна обчислювальна потужність задачі</span>
-            <input id="min-task-power-input" class="inp" type="number" value="10">
-        </div>
-        <div class="row">
-            <span>Максимальна обчислювальна потужність задачі</span>
-            <input id="max-task-power-input" class="inp" type="number" value="200">
-        </div>
-        <div class="row">
-            <div class="button_columm"><button id="run" class="run">Run</button></div>
-            <div class="button_columm"><button id="stop" class="stop">Stop</button></div>
-            <div class="columm">
-                <p id="prob_text">Імовірність появи задач 
-                    <input id="task-probability-input" class="inp" type="number" name="power" value="0.1" min="0" max="1" step="0.00001">
-                </p>
+        <div id="before-load" class="row">
+            <div class="column">
+                <div class="row">
+                    <span>Режим</span>
+                    <select>
+                        <option value="FIFO">FIFO</option>
+                        <option value="JSP">Плануючий процесор</option>
+                        <option value="JIESP">Плануючий і обчислюючий процесор з перериванням черги</option>
+                        <option value="JOESP">Плануючий і обчислюючий процесор з оптимальним часом плануванням</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <span>Мінімальна обчислювальна потужність задачі</span>
+                    <input id="min-task-power-input" class="inp" type="number" value="10">
+                </div>
+                <div class="row">
+                    <span>Максимальна обчислювальна потужність задачі</span>
+                    <input id="max-task-power-input" class="inp" type="number" value="200">
+                </div>
+                <div class="row">
+                    <span>Мінімальна обчислювальна потужність процесора</span>
+                    <input id="min-processor-power-input" class="inp" type="number" value="1">
+                </div>
+                <div class="row">
+                    <span>Максимальна обчислювальна потужність процесора</span>
+                    <input id="max-processor-power-input" class="inp" type="number" value="5">
+                </div>
+                <div class="row">
+                    <button id="load">Завантажити</button>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="column1">
-            <div class="row">
-                <span>Поточна кількість задач</span>
-                <div id="task-count-output"></div>
+        <div id="root" class="row" style="visibility: hidden;">
+            <div class="column">
+                <div class="row">
+                    <div class="button_columm"><button id="run" class="run">Run</button></div>
+                    <div class="columm">
+                        <p id="prob_text">Імовірність появи задач 
+                            <input id="task-probability-input" class="inp" type="number" name="power" value="0.1" min="0" max="1" step="0.00001">
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column1">
+                        <div class="row">
+                            <span>Поточна кількість задач</span>
+                            <div id="task-count-output"></div>
+                        </div>
+                        <div class="row" id="task-column">
+                            
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="row" id="proc-column"></div>
+                    </div>
+                </div>
             </div>
-            <div class="row" id="task-column">
-
-            </div>
+            
         </div>
-        <div class="column">
-            <div class="row" id="proc-column"></div>
-        </div>
+        
     </div>
     
     <div class="footer">
@@ -66,31 +86,39 @@
     
     <script>
         let inputValueGetter = (id) => document.getElementById(id).value;
-        let modelRunner = (() => {
-            let model = (() => {
-                let taskQueueElement = document.getElementById('task-column');
-                let processorsElement = document.getElementById('proc-column');
-                let initProcessorCount = 5;
-                let taskQueueCreatorMaker = (() => {
-                    let runTimeSeconds = 10;
-                    let taskProbabilityGetter = () => parseFloat(inputValueGetter('task-probability-input'));
-                    console.log(taskProbabilityGetter());
-                    let initTaskCount = 10;
-                    let processorCount = initProcessorCount;
-                    let minPowerGetter = () => parseInt(inputValueGetter('min-task-power-input'));
-                    let maxPowerGetter = () => parseInt(inputValueGetter('max-task-power-input'));
-                    let taskCountSetter = (count) => document.getElementById('task-count-output').innerHTML = count;
-                    return TaskQueueCreatorMaker(runTimeSeconds, taskProbabilityGetter, initTaskCount, 
+        let initModel = () => {
+            let modelRunner = (() => {
+                let model = (() => {
+                    let taskQueueElement = document.getElementById('task-column');
+                    let processorsInfo = {
+                        processorsElement: document.getElementById('proc-column'),
+                        initProcessorCount: 5,
+                        minProcessorPower: parseInt(inputValueGetter('min-processor-power-input')),
+                        maxProcessorPower: parseInt(inputValueGetter('max-processor-power-input')),
+                    };
+                    let taskQueueCreatorMaker = (() => {
+                        let runTimeSeconds = 10;
+                        let taskProbabilityGetter = () => parseFloat(inputValueGetter('task-probability-input'));
+                        //console.log(taskProbabilityGetter());
+                        let initTaskCount = 10;
+                        let minPowerGetter = () => parseInt(inputValueGetter('min-task-power-input'));
+                        let maxPowerGetter = () => parseInt(inputValueGetter('max-task-power-input'));
+                        let taskCountSetter = (count) => document.getElementById('task-count-output').innerHTML = count;
+                        
+                        return TaskQueueCreatorMaker(runTimeSeconds, taskProbabilityGetter, initTaskCount, 
                         minPowerGetter, maxPowerGetter, taskCountSetter);
+                    })();
+                    return Model(taskQueueElement, processorsInfo, taskQueueCreatorMaker);
                 })();
-                return Model(taskQueueElement, processorsElement, initProcessorCount, taskQueueCreatorMaker);
+                let runTimes = 5;
+                return ModelRunner(model, runTimes);
             })();
-            let runTimes = 5;
-            return ModelRunner(model, runTimes);
-        })();
-
-        modelRunner.init();
-        
+            
+            modelRunner.init();
+            document.getElementById('root').style.visibility = 'visible';
+            document.getElementById('before-load').style.visibility = 'hidden';
+        }
+        document.getElementById('load').addEventListener('click', initModel);
         let runModel = () => {
             let report = modelRunner.start();
             let reporter = Reporter(report);
