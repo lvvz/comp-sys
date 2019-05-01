@@ -1,199 +1,105 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<title>CS FIFO</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.header {
-  background-color: #f1f1f1;
-  padding: 30px;
-  text-align: center;
-  font-size: 35px;
-}
-
-.task-idle,
-.task-busy,
-.task-active,
-.row {
-  display: -webkit-flex;
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.button
-.proc-busy,
-.proc-active,
-.column {
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-}
-
-    .check_b {
-        text-align: center;
-        width: 5%;
-    }
-
-.footer {
-  background-color: #f1f1f1;
-  padding: 10px;
-  text-align: center;
-}
-.column1 {
-    width: 25%;
-    }
-
-    #prob, #prob_text {
-        font-size: 24px;
-    }
-
-.run,
-.stop,
-.button
-.proc-busy,
-.proc-active,
-.task-busy,
-.task-active,
-.proc-idle,
-.task-idle {
-    margin: 10px;
-    padding: 10px;
-}
-
-    .task-busy,
-    .proc-busy {
-        background-color: blue;
-        box-shadow: 0 0 10px rgba(0, 0, 255, 1);
-    }
-
-    .task-active,
-    .proc-active {
-        background-color: #5ac955;
-        box-shadow: 0 0 10px rgba(0, 255, 0, 1);
-    }
-
-    .task-idle,
-    .proc-idle {
-        background-color: #cccccc;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 1);
-    }
-
-    .task-wait {
-        background-color: blue;
-        box-shadow: 0 0 10px rgba(0, 0, 255, 1);
-    }
-
-    .inp {
-        width: 60px;
-    }
-
-.run,
-.stop,
-.button {
-  border: none;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-
-    /*
-    #task_procs {
-
-        margin: 10px;
-        padding: 10px;
-        font-size: 14px;
-        background-color: #cccccc;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 1);
-    }*/
-
-    .run {
-        background-color: #5ac955;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 1);
-    }
-    .run:active {
-        background-color: green;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 1) inset;
-    }
-
-    .stop {
-        background-color: #f23030;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 1);
-    }
-    .stop:active {
-        background-color: red;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 1) inset;
-    }
-    .run, .stop {
-        margin-top: 30%;
-    }
-
-    .task_text {
-        width: 70%;
-    }
-
-@media (max-width: 600px) {
-  .row {
-    -webkit-flex-direction: column;
-    flex-direction: column;
-  }
-}
-</style>
-</head>
-<body>
-
-<div class="header">
-    <h2>Планування задач в багатопроцесорних системах</h2>
-</div>
-
-<div class="column">
-    <div class="row">
-        <div class="button_columm"><button id="run" class="run">Run</button></div>
-        <div class="button_columm"><button id="stop" class="stop">Stop</button></div>
-        <div class="columm"><p id="prob_text">Імовірність появи задач <input id="prob" class="inp" type="number" name="power" value="0.1" min="0" max="1"></p></div>
-    </div>
-</div>
-<div class="row">
-    <div class="column1" id="task-column"></div>
-    <div class="column">
-        <div class="row" id="proc-column"></div>
-    </div>
-</div>
-
-<div class="footer">
-    <p></p>
-</div>
-
-<script src="script.js"></script>
-
-<script>
+    <title>CS FIFO</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    let taskQueueElement = document.getElementById('task-column');
-    let processorsElement = document.getElementById('proc-column');
-    let initProcessorCount = 5;
-    let taskQueueCreatorMaker = (() => {
-        let runTimeSeconds = 10;
-        let taskProbability = 0.1;
-        let initTaskCount = 10;
-        let processorCount = initProcessorCount;
-        let minPower = 10;
-        let maxPower = 200;
-        return TaskQueueCreatorMaker(runTimeSeconds, taskProbability, initTaskCount, minPower, maxPower);
-    })();
-    let model = Model(taskQueueElement, processorsElement, initProcessorCount, taskQueueCreatorMaker);
-</script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    
+</head>
 
+
+<body>
+    <div class="header">
+        <h2>Планування задач в багатопроцесорних системах</h2>
+    </div>
+    
+    <div class="column">
+        <div class="row">
+            <span>Режим</span>
+            <select>
+                <option value="FIFO">FIFO</option>
+                <option value="JSP">Плануючий процесор</option>
+                <option value="JIESP">Плануючий і обчислюючий процесор з перериванням черги</option>
+                <option value="JOESP">Плануючий і обчислюючий процесор з оптимальним часом плануванням</option>
+            </select>
+        </div>
+        <div class="row">
+            <span>Мінімальна обчислювальна потужність задачі</span>
+            <input id="min-task-power-input" class="inp" type="number" value="10">
+        </div>
+        <div class="row">
+            <span>Максимальна обчислювальна потужність задачі</span>
+            <input id="max-task-power-input" class="inp" type="number" value="200">
+        </div>
+        <div class="row">
+            <div class="button_columm"><button id="run" class="run">Run</button></div>
+            <div class="button_columm"><button id="stop" class="stop">Stop</button></div>
+            <div class="columm">
+                <p id="prob_text">Імовірність появи задач 
+                    <input id="task-probability-input" class="inp" type="number" name="power" value="0.1" min="0" max="1" step="0.00001">
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column1">
+            <div class="row">
+                <span>Поточна кількість задач</span>
+                <div id="task-count-output"></div>
+            </div>
+            <div class="row" id="task-column">
+
+            </div>
+        </div>
+        <div class="column">
+            <div class="row" id="proc-column"></div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p></p>
+    </div>
+    
+    <script src="script.js"></script>
+    
+    <script>
+        let inputValueGetter = (id) => document.getElementById(id).value;
+        let modelRunner = (() => {
+            let model = (() => {
+                let taskQueueElement = document.getElementById('task-column');
+                let processorsElement = document.getElementById('proc-column');
+                let initProcessorCount = 5;
+                let taskQueueCreatorMaker = (() => {
+                    let runTimeSeconds = 10;
+                    let taskProbabilityGetter = () => parseFloat(inputValueGetter('task-probability-input'));
+                    console.log(taskProbabilityGetter());
+                    let initTaskCount = 10;
+                    let processorCount = initProcessorCount;
+                    let minPowerGetter = () => parseInt(inputValueGetter('min-task-power-input'));
+                    let maxPowerGetter = () => parseInt(inputValueGetter('max-task-power-input'));
+                    let taskCountSetter = (count) => document.getElementById('task-count-output').innerHTML = count;
+                    return TaskQueueCreatorMaker(runTimeSeconds, taskProbabilityGetter, initTaskCount, 
+                        minPowerGetter, maxPowerGetter, taskCountSetter);
+                })();
+                return Model(taskQueueElement, processorsElement, initProcessorCount, taskQueueCreatorMaker);
+            })();
+            let runTimes = 5;
+            return ModelRunner(model, runTimes);
+        })();
+
+        modelRunner.init();
+        
+        let runModel = () => {
+            let report = modelRunner.start();
+            let reporter = Reporter(report);
+            reporter.show();
+        };
+        document.getElementById('run').addEventListener('click', runModel);
+        
+        
+    </script>
+    
 </body>
 </html>

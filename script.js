@@ -63,11 +63,12 @@ let Checkbox = (function() {
 })();
 
 let TaskQueueRunner = (function() {
-    return (runTimeSeconds, taskProbability, enqueueNew) => {
+    return (runTimeSeconds, taskProbabilityGetter, addNew) => {
         let runTimeMiliSeconds = 1000 * +runTimeSeconds;
+        let taskProbability = taskProbabilityGetter();
         let eachMiliSecondDo = () => {
             if (!(Math.random() > taskProbability)) {
-                enqueueNew();
+                addNew();
             }
         };
         let start = () => {
@@ -124,7 +125,7 @@ let TaskCreator = (taskQueueElement, processorCount) => {
     let taskHTML = TaskHTML();
     let checkbox = Checkbox();
     let taskCheckboxSetter = TaskCheckboxSetter();
-    let combinations = CombinationArray(initProcessorCount);
+    let combinations = CombinationArray(processorCount);
     return (task) => {
         let power = task.power;
         let processors = combinations[task.processorCombination];
@@ -141,14 +142,25 @@ let TaskCreator = (taskQueueElement, processorCount) => {
 }
 
 let TaskQueueCreator = (function() {
-    return function(runTimeSeconds, taskProbability, initTaskCount, minPower, maxPower, render, randomProcessorCombination) {
+    return function(runTimeSeconds, taskProbabilityGetter, initTaskCount, 
+        minPowerGetter, maxPowerGetter, taskCountSetter, render, randomProcessorCombination) {
         let queue = [];
+        let taskCount = 0;
         let taskWrapper = Task();
-        let randomPower = () => randomInt(minPower, maxPower+1);
+        let randomPower = (() => {
+            let minPower = minPowerGetter();
+            let maxPower = maxPowerGetter();
+            return () => randomInt(minPower, maxPower+1);
+        })();
         let enqueueNew = () => queue.push({
             task: taskWrapper.make(randomPower(), randomProcessorCombination()),
             processor: undefined
         });
+        let addNew = () => {
+            enqueueNew();
+            ++taskCount;
+            taskCountSetter(taskCount);
+        };
         //console.log(combinations);
         
         let init = () => {
@@ -157,7 +169,7 @@ let TaskQueueCreator = (function() {
                 render(queue[i].task);
             }
         }
-        let runner = TaskQueueRunner(runTimeSeconds, taskProbability, enqueueNew);
+        let runner = TaskQueueRunner(runTimeSeconds, taskProbabilityGetter, addNew);
         let start = () => runner.start();
         return {
             init, start
@@ -166,9 +178,9 @@ let TaskQueueCreator = (function() {
 })();
 
 let TaskQueueCreatorMaker = 
-    (runTimeSeconds, taskProbability, initTaskCount, minPower, maxPower) => 
+    (runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter) => 
     (render, randomProcessorCombination) => 
-    TaskQueueCreator(runTimeSeconds, taskProbability, initTaskCount, minPower, maxPower, render, randomProcessorCombination);
+    TaskQueueCreator(runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter, render, randomProcessorCombination);
 
 let Processor = () => (power) => { return { power, task: undefined }; };
 
@@ -199,25 +211,44 @@ let Model = (function() {
 
         let cleanTaskQueue = () => taskQueueElement.innerHTML = "";
         let cleanProcessors = () => processorsElement.innerHTML = "";
-        let clean = () => {
-            cleanProcessors();
-            cleanTaskQueue();
-        }
+        let clean = () => { cleanProcessors(); cleanTaskQueue(); }
 
-        appendNewProcessors();
-        taskQueueCreator.init();
-        let report = taskQueueCreator.start();
-        //clean();
-        return report;
+        let init = () => {
+            appendNewProcessors();
+            taskQueueCreator.init();
+        }
+        let start = () => {
+            let report = taskQueueCreator.start();
+            //clean();
+            return report;
+        };
+
+        return { init, start };
     };
 })();
 
-let Reporter = () => (fullPower, usedPower) => {
+let Reporter = (report) => {
+    let fullPower = report.fullPower;
+    let usedPower = report.usedPower;
     let averageUsedPower = usedPower / n;
-    alert('Використано потужності: '+usedPower
-            +'\nСередня використана потужність: '+averageUsedPower
-                    +'\nДоступно: '+fullPower
-                    +"\nККД = "+(100*averageUsedPower/fullPower)
-                    +"%\nККД' = "+(100*averageUsedPower/fullPower)
-                    +'%');
+    let show = () => {  
+        alert('Використано потужності: '+usedPower
+                +'\nСередня використана потужність: '+averageUsedPower
+                +'\nДоступно: '+fullPower
+                +"\nККД = "+(100*averageUsedPower/fullPower)
+                +"%\nККД' = "+(100*averageUsedPower/fullPower)
+                +'%');
+    }
+    return { show };
 }
+
+let ModelRunner = (model, runTimes) => {
+    let init = () => model.init();
+    let start = () => {
+        model.start();
+        init();
+    };
+    return {
+        init, start
+    };
+};
