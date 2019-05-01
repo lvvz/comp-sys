@@ -19,7 +19,7 @@ let Task = (function() {
     };
 })();
 
-let Processor = (function() {
+let ProcessorHTML = (function() {
     return function() {
         let create = (n) => {
             return '<div class="proc-idle">'
@@ -170,16 +170,32 @@ let TaskQueueCreatorMaker =
     (render, randomProcessorCombination) => 
     TaskQueueCreator(runTimeSeconds, taskProbability, initTaskCount, minPower, maxPower, render, randomProcessorCombination);
 
+let Processor = () => (power) => { return { power, task: undefined }; };
+
+let Processors = () => {}
+
+let ProcessorCreator = (processorsElement) => {
+    let processorHTML = ProcessorHTML();
+    return (processor) => {
+
+    };
+};
+
 let Model = (function() {
     return function(taskQueueElement, processorsElement, initProcessorCount, taskQueueCreatorMaker) {
         let taskCreator = TaskCreator(taskQueueElement, initProcessorCount);
-        let randomProcessorCombination = () => randomInt(1, Math.pow(2, initProcessorCount));
+        let randomProcessorCombination = (() => {
+            let pow2 = Math.pow(2, initProcessorCount);
+            return () => randomInt(1, pow2);
+        })();
         let taskQueueCreator = taskQueueCreatorMaker(taskCreator, randomProcessorCombination);
-        let createNewProcessor = () => {
+
+        let processorCreator = ProcessorCreator(processorsElement);
+        /*let createNewProcessor = () => {
             undefined
         }
-        let appendNewProcessor = () => processorsElement.appendChild(createNewProcessor());
-        let appendNewProcessors = () => doNTimes(appendNewProcessor, initProcessorCount);
+        let appendNewProcessor = () => processorsElement.appendChild(createNewProcessor());*/
+        let appendNewProcessors = () => doNTimes(()=>{}, initProcessorCount);
 
         let cleanTaskQueue = () => taskQueueElement.innerHTML = "";
         let cleanProcessors = () => processorsElement.innerHTML = "";
@@ -188,20 +204,20 @@ let Model = (function() {
             cleanTaskQueue();
         }
 
-        taskQueueCreator.init();
         appendNewProcessors();
-        let report = taskQueueCreator.run();
-        clean();
+        taskQueueCreator.init();
+        let report = taskQueueCreator.start();
+        //clean();
         return report;
     };
 })();
 
-let Reporter = () => (full_power, used_power) => {
-    let average_used_power = used_power / n;
-    alert('Використано потужності: '+used_power
-            +'\nСередня використана потужність: '+average_used_power
-                    +'\nДоступно: '+full_power
-                    +"\nККД = "+(100*average_used_power/full_power)
-                    +"%\nККД' = "+(100*average_used_power/full_power)
+let Reporter = () => (fullPower, usedPower) => {
+    let averageUsedPower = usedPower / n;
+    alert('Використано потужності: '+usedPower
+            +'\nСередня використана потужність: '+averageUsedPower
+                    +'\nДоступно: '+fullPower
+                    +"\nККД = "+(100*averageUsedPower/fullPower)
+                    +"%\nККД' = "+(100*averageUsedPower/fullPower)
                     +'%');
 }
