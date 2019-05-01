@@ -177,14 +177,22 @@ body {
 </div>
 
 <script src="script.js"></script>
+
 <script>
-    let runTimeSeconds = 10;
-    let taskProbability = 0.1;
-    let initTaskCount = 10;
-    let processorCount = 5;
-    let minPower = 10;
-    let maxPower = 200;
-    let taskQueue = TaskQueueCreator(runTimeSeconds, taskProbability, initTaskCount, processorCount, minPower, maxPower);
+    
+    let taskQueueElement = document.getElementById('task-column');
+    let processorsElement = document.getElementById('proc-column');
+    let initProcessorCount = 5;
+    let taskQueueCreatorMaker = (() => {
+        let runTimeSeconds = 10;
+        let taskProbability = 0.1;
+        let initTaskCount = 10;
+        let processorCount = initProcessorCount;
+        let minPower = 10;
+        let maxPower = 200;
+        return TaskQueueCreatorMaker(runTimeSeconds, taskProbability, initTaskCount, minPower, maxPower);
+    })();
+    let model = Model(taskQueueElement, processorsElement, initProcessorCount, taskQueueCreatorMaker);
 </script>
 
 </body>
