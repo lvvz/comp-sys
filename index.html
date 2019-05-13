@@ -20,7 +20,7 @@
             <div class="column">
                 <div class="row">
                     <span>Режим</span>
-                    <select>
+                    <select id="mode-selector">
                         <option value="FIFO">FIFO</option>
                         <option value="JSP">Плануючий процесор</option>
                         <option value="JIESP">Плануючий і обчислюючий процесор з перериванням черги</option>
@@ -86,27 +86,35 @@
     
     <script>
         let inputValueGetter = (id) => document.getElementById(id).value;
+        let getters = {
+            minProcessorPower: () => parseInt(inputValueGetter('min-processor-power-input')),
+            maxProcessorPower: () => parseInt(inputValueGetter('max-processor-power-input')),
+            processorsElement: () => document.getElementById('proc-column'),
+            taskQueueElement: () => document.getElementById('task-column'),
+            minTaskPower: () => parseInt(inputValueGetter('min-task-power-input')),
+            maxTaskPower: () => parseInt(inputValueGetter('max-task-power-input')),
+            scheduleMode: () => inputValueGetter('mode-selector'),
+            taskProbability: () => parseFloat(inputValueGetter('task-probability-input'))
+        };
         let initModel = () => {
             let modelRunner = (() => {
                 let model = (() => {
-                    let taskQueueElement = document.getElementById('task-column');
+                    let taskQueueElement = getters.taskQueueElement();
                     let processorsInfo = {
-                        processorsElement: document.getElementById('proc-column'),
+                        processorsElement: getters.processorsElement(),
                         initProcessorCount: 5,
-                        minProcessorPower: parseInt(inputValueGetter('min-processor-power-input')),
-                        maxProcessorPower: parseInt(inputValueGetter('max-processor-power-input')),
+                        minProcessorPower: getters.minProcessorPower(),
+                        maxProcessorPower: getters.maxProcessorPower(),
                     };
                     let taskQueueCreatorMaker = (() => {
                         let runTimeSeconds = 10;
-                        let taskProbabilityGetter = () => parseFloat(inputValueGetter('task-probability-input'));
                         //console.log(taskProbabilityGetter());
                         let initTaskCount = 10;
-                        let minPowerGetter = () => parseInt(inputValueGetter('min-task-power-input'));
-                        let maxPowerGetter = () => parseInt(inputValueGetter('max-task-power-input'));
                         let taskCountSetter = (count) => document.getElementById('task-count-output').innerHTML = count;
-                        
-                        return TaskQueueCreatorMaker(runTimeSeconds, taskProbabilityGetter, initTaskCount, 
-                        minPowerGetter, maxPowerGetter, taskCountSetter);
+                        let scheduleMode = getters.scheduleMode();
+                        // console.log(scheduleMode);
+                        return TaskQueueCreatorMaker(runTimeSeconds, getters.taskProbability, initTaskCount, 
+                        getters.minTaskPower, getters.maxTaskPower, taskCountSetter, scheduleMode);
                     })();
                     return Model(taskQueueElement, processorsInfo, taskQueueCreatorMaker);
                 })();
@@ -114,17 +122,17 @@
                 return ModelRunner(model, runTimes);
             })();
             
-            modelRunner.init();
+            let modelData = modelRunner.init();
+            let runModel = () => {
+                let report = modelRunner.start(modelData);
+                let reporter = Reporter(report);
+                reporter.show();
+            };
+            document.getElementById('run').addEventListener('click', runModel);
             document.getElementById('root').style.visibility = 'visible';
             document.getElementById('before-load').style.visibility = 'hidden';
         }
         document.getElementById('load').addEventListener('click', initModel);
-        let runModel = () => {
-            let report = modelRunner.start();
-            let reporter = Reporter(report);
-            reporter.show();
-        };
-        document.getElementById('run').addEventListener('click', runModel);
         
         
     </script>

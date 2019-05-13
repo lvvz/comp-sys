@@ -17,7 +17,7 @@ let Task = (function() {
         return {
             make: (power, processorCombination) => {
                 ++number;
-                return { power, processorCombination, number }
+                return { power, processorCombination, number, processor: undefined };
             }
         };
     };
@@ -35,8 +35,13 @@ let ProcessorHTML = (function() {
             +'</div>';
         };
         let getPower = (element) => element.children[1].children[0].value;
+        let setTask = (processorElement, task) => {
+            processorElement.setAttribute('class', 'proc-active');
+            processorElement.lastChild.remove();
+            processorElement.insertAdjacentHTML('beforeend', '<div>Обробка №'+task+'</div>');
+        }
         return {
-            create, getPower
+            create, getPower, setTask
         };
     };
 })();
@@ -50,9 +55,8 @@ let TaskHTML = (function() {
                 +')</div>'
             +'</div>';
         };
-        return {
-            create
-        };
+        let setAsActive = (taskElement) => taskElement.setAttribute('class', 'task-active');
+        return { create, setAsActive };
     };
 })();
 
@@ -61,13 +65,11 @@ let Checkbox = (function() {
         let create = (isChecked) => {
             return '<div class="column"><input type="checkbox" '+ (isChecked ? 'checked' : '') +'></div>';
         };
-        return {
-            create
-        };
+        return { create };
     };
 })();
 
-let TaskQueueRunner = (function() {
+let TaskQueuePusher = (function() {
     return (runTimeSeconds, taskProbabilityGetter, addNew) => {
         let runTimeMiliSeconds = 1000 * +runTimeSeconds;
         let taskProbability = taskProbabilityGetter();
@@ -88,9 +90,7 @@ let TaskQueueRunner = (function() {
             };
             let addTaskTimer = setInterval(timerHandler, 1);
         }
-        return {
-            start
-        };
+        return { start };
     };
 })();
 
@@ -126,14 +126,13 @@ let TaskCheckboxSetter = () => {
     }
 }
 
-let TaskCreator = (taskQueueElement, processorCount) => {
+let TaskCreator = (taskQueueElement, processorCount, getProcessorCombination) => {
     let taskHTML = TaskHTML();
     let checkbox = Checkbox();
     let taskCheckboxSetter = TaskCheckboxSetter();
-    let combinations = CombinationArray(processorCount);
     return (task) => {
         let power = task.power;
-        let processors = combinations[task.processorCombination];
+        let processors = getProcessorCombination(task.processorCombination);
         let number = task.number;
         taskQueueElement.insertAdjacentHTML('beforeend', taskHTML.create(power, number));
         let currentTaskElement = taskQueueElement.lastChild;
@@ -148,8 +147,8 @@ let TaskCreator = (taskQueueElement, processorCount) => {
 
 let TaskQueueCreator = (function() {
     return function(runTimeSeconds, taskProbabilityGetter, initTaskCount, 
-        minPowerGetter, maxPowerGetter, taskCountSetter, render, randomProcessorCombination,
-        schedulerMode) {
+        minPowerGetter, maxPowerGetter, taskCountSetter, taskCreator, randomProcessorCombination,
+        getProcessorCombination, schedulerMode) {
         let queue = [];
         let taskCount = 0;
         let taskWrapper = Task();
@@ -158,32 +157,31 @@ let TaskQueueCreator = (function() {
             let maxPower = maxPowerGetter();
             return () => randomInt(minPower, maxPower+1);
         })();
-        let enqueueNew = () => queue.push({
-            task: taskWrapper.make(randomPower(), randomProcessorCombination()),
-            processor: undefined
-        });
+        let enqueueNew = () => queue.push(taskWrapper.make(randomPower(), randomProcessorCombination()));
         let addNew = () => {
             enqueueNew();
             ++taskCount;
             taskCountSetter(taskCount);
-        };
-        //console.log(combinations);
-        
+        };        
         let init = () => {
             doNTimes(enqueueNew, initTaskCount);
-            for (let i = 0; i < initTaskCount; ++i) {
-                render(queue[i].task);
-            }
+            doNTimesWithIteration((i) => taskCreator(queue[i]), initTaskCount);
         }
-        let runner = TaskQueueRunner(runTimeSeconds, taskProbabilityGetter, addNew);
+        let pusher = TaskQueuePusher(runTimeSeconds, taskProbabilityGetter, addNew);
         let getQueue = () => queue;
-        let schedulerCreator = SchedulerCreatorMaker(schedulerMode);
-        let scheduler = schedulerCreator(getQueue);
+        let scheduler = (processors) => SchedulerCreatorMaker(schedulerMode, getQueue, processors, getProcessorCombination);
+
+
+        let fullPower = 0;
+        let usedPower = 0;
+        let timeLeft = runTimeMiliSeconds;
         let start = (data) => {
-            runner.start();
-            let processors = data.processors;
-            let report = scheduler(processors);
-            return report;
+            pusher.start();
+            while (!(timeLeft <= 0)) {
+                
+                timeoutForRunningTasks();
+            }
+            return { fullPower, usedPower };
         }
         return {
             init, start
@@ -192,12 +190,12 @@ let TaskQueueCreator = (function() {
 })();
 
 let TaskQueueCreatorMaker = 
-    (runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter) => 
-    (render, randomProcessorCombination) => 
+    (runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter, schedulerMode) => 
+    (taskCreator, randomProcessorCombination, getProcessorCombination) => 
     TaskQueueCreator(runTimeSeconds, taskProbability, initTaskCount, minPowerGetter, maxPowerGetter, taskCountSetter,
-         render, randomProcessorCombination);
+         taskCreator, randomProcessorCombination, getProcessorCombination, schedulerMode);
 
-let Processor = () => (power) => { return { power, task: undefined }; };
+let ProcessorCreator = () => (power) => { return { power, task: undefined }; };
 
 let ProcessorsCreator = (processorsInfo) => {
     let processorsElement = processorsInfo.processorsElement;
@@ -216,24 +214,27 @@ let Model = (function() {
     return function(taskQueueElement, processorsInfo, taskQueueCreatorMaker) {
         let processorsElement = processorsInfo.processorsElement;
         let initProcessorCount = processorsInfo.initProcessorCount;
-        let taskCreator = TaskCreator(taskQueueElement, initProcessorCount);
+        let combinations = CombinationArray(initProcessorCount);
+        let getProcessorCombination = (combinationIndex) => combinations[combinationIndex];
+        let taskCreator = TaskCreator(taskQueueElement, initProcessorCount, getProcessorCombination);
         let randomProcessorCombination = (() => {
             let pow2 = Math.pow(2, initProcessorCount);
             return () => randomInt(1, pow2);
         })();
-        let taskQueueCreator = taskQueueCreatorMaker(taskCreator, randomProcessorCombination);
+        let taskQueueCreator = taskQueueCreatorMaker(taskCreator, randomProcessorCombination, getProcessorCombination);
 
-        let processorCreator = ProcessorsCreator(processorsInfo);
-        let appendNewProcessors = () => doNTimesWithIteration((i) => processorCreator.create(i+1), initProcessorCount);
+        let processorsCreator = ProcessorsCreator(processorsInfo);
+        let appendNewProcessors = () => doNTimesWithIteration((i) => processorsCreator.create(i+1), initProcessorCount);
 
         let cleanTaskQueue = () => taskQueueElement.innerHTML = "";
         let cleanProcessors = () => processorsElement.innerHTML = "";
         let clean = () => { cleanProcessors(); cleanTaskQueue(); }
 
+        let processorCreator = ProcessorCreator();
         let makeProcessors = () => {
             let processors = [];
             for (let processorElement of processorsElement.children) {
-                processors.push(processorCreator.getPower(processorElement));
+                processors.push(processorCreator(processorsCreator.getPower(processorElement)));
             }
             return processors;
         }
@@ -244,7 +245,7 @@ let Model = (function() {
             return { processors };
         }
         let start = (data) => {
-            let report = taskQueueCreator.start(data);
+            taskQueueCreator.start(data);
             //clean();
             return report;
         };
@@ -270,30 +271,76 @@ let Reporter = (report) => {
 
 let ModelRunner = (model, runTimes) => {
     let init = () => model.init();
-    let start = () => {
-        model.start();
+    let start = (modelData) => {
+        model.start(modelData);
         init();
+        return {
+            fullPower: -1111111,
+            usedPower: +2222222
+        }
     };
     return {
         init, start
     };
 };
 
-let Schedulers = (getQueue, processors) => { 
+let ModelWrapper = () => {
+    let getEvaluatingProcessorsIndices = () => {
+
+    };
+    let getFastestIdleTaskForShedulingProcessorToo = () => {
+
+    };
+    let assignTaskToProcessor = () => {
+
+    };
+    let getQueue = () => {
+
+    };
+    let managedToAssignTaskToAnyProcessor = () => {
+
+    };
+    let getFastestIdleTaskForEvaluatingProcessors = () => {
+
+    };
     return {
-    'FIFO': () => {
-
-    },
-    'JSP': () => {
-
-    },
-    '': () => {
-
-    },
-    '': () => {
-
+        getEvaluatingProcessorsIndices,
+        getFastestIdleTaskForShedulingProcessorToo,
+        assignTaskToProcessor,
+        getQueue,
+        managedToAssignTaskToAnyProcessor,
+        getFastestIdleTaskForEvaluatingProcessors
     }
-};
+}
+
+let Schedulers = (modelWrapper) => { 
+    let JIESP = () => {
+        for (let processorIndex of modelWrapper.getEvaluatingProcessorsIndices()) {
+            if (!modelWrapper.processorIsBusy(processorIndex)) {
+                let fastestIdleTaskIndex = modelWrapper.getFastestIdleTaskForShedulingProcessorToo();
+                modelWrapper.assignTaskToProcessor(fastestIdleTaskIndex, processorIndex);
+            }
+        }
+    }
+    return {
+        'FIFO': () => {
+            for (let taskIndex in modelWrapper.getQueue()) {
+                if (!modelWrapper.managedToAssignTaskToAnyProcessor(taskIndex)) {
+                    break;
+                }
+            }
+        },
+        'JSP': () => {
+            for (let processorIndex of modelWrapper.getEvaluatingProcessorsIndices()) {
+                if (!modelWrapper.processorIsBusy(processorIndex)) {
+                    let fastestIdleTaskIndex = modelWrapper.getFastestIdleTaskForEvaluatingProcessors();
+                    modelWrapper.assignTaskToProcessor(fastestIdleTaskIndex, processorIndex);
+                }
+            }
+        },
+        'JIESP': JIESP,
+        'JOESP': JIESP
+    };
 };
 
-let SchedulerCreatorMaker = (mode) => (getQueue) => (processors) => Schedulers(getQueue, processors)[mode]();
+let SchedulerCreatorMaker = (mode, modelWrapper) => Schedulers(modelWrapper)[mode]();

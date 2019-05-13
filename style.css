@@ -1,0 +1,145 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.header {
+    background-color: #f1f1f1;
+    padding: 30px;
+    text-align: center;
+    font-size: 35px;
+}
+
+.task-idle,
+.task-busy,
+.task-active,
+.row {
+    display: -webkit-flex;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.button
+.proc-busy,
+.proc-active,
+.column {
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+}
+
+.check_b {
+    text-align: center;
+    width: 5%;
+}
+
+.footer {
+    background-color: #f1f1f1;
+    padding: 10px;
+    text-align: center;
+}
+.column1 {
+    width: 25%;
+}
+
+#prob, #prob_text {
+    font-size: 24px;
+}
+
+.run,
+.stop,
+.button
+.proc-busy,
+.proc-active,
+.task-busy,
+.task-active,
+.proc-idle,
+.task-idle {
+    margin: 10px;
+    padding: 10px;
+}
+
+.task-busy,
+.proc-busy {
+    background-color: blue;
+    box-shadow: 0 0 10px rgba(0, 0, 255, 1);
+}
+
+.task-active,
+.proc-active {
+    background-color: #5ac955;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 1);
+}
+
+.task-idle,
+.proc-idle {
+    background-color: #cccccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 1);
+}
+
+.task-wait {
+    background-color: blue;
+    box-shadow: 0 0 10px rgba(0, 0, 255, 1);
+}
+
+.inp {
+    width: 60px;
+}
+
+.run,
+.stop,
+.button {
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
+/*
+#task_procs {
+    
+    margin: 10px;
+    padding: 10px;
+    font-size: 14px;
+    background-color: #cccccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 1);
+}*/
+
+.run {
+    background-color: #5ac955;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 1);
+}
+.run:active {
+    background-color: green;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 1) inset;
+}
+
+.stop {
+    background-color: #f23030;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 1);
+}
+.stop:active {
+    background-color: red;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 1) inset;
+}
+.run, .stop {
+    margin-top: 30%;
+}
+
+.task_text {
+    width: 70%;
+}
+
+@media (max-width: 600px) {
+    .row {
+        -webkit-flex-direction: column;
+        flex-direction: column;
+    }
+}
